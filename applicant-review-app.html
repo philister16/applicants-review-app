@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applicant Review Tool</title>
+    <!-- Add Papa Parse for robust CSV parsing -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --bg-color: #f5f5f5;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #dddddd;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1, h2, h3 {
+            color: var(--primary-color);
+            margin-bottom: 16px;
+        }
+        
+        .setup-section, .review-section {
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"], 
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 8px;
+            margin-bottom: 8px;
+        }
+        
+        button:hover {
+            opacity: 0.9;
+        }
+        
+        button.danger {
+            background-color: #e74c3c;
+        }
+        
+        button.secondary {
+            background-color: #7f8c8d;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            background-color: var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 16px;
+        }
+        
+        .progress-bar-inner {
+            height: 10px;
+            background-color: var(--secondary-color);
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+        }
+        
+        .star-rating {
+            font-size: 32px;
+            margin: 16px 0;
+        }
+        
+        .star {
+            cursor: pointer;
+            color: #ccc;
+        }
+        
+        .star.selected {
+            color: #f39c12;
+        }
+        
+        .chart-container {
+            margin: 20px 0;
+        }
+        
+        .bar-chart {
+            width: 100%;
+        }
+        
+        .bar-container {
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .bar-label {
+            width: 40%;
+            padding-right: 10px;
+            font-size: 14px;
+        }
+        
+        .bar-outer {
+            width: 60%;
+            background-color: var(--border-color);
+            height: 20px;
+            border-radius: 4px;
+        }
+        
+        .bar-inner {
+            height: 100%;
+            background-color: var(--secondary-color);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .char-count {
+            font-size: 12px;
+            text-align: right;
+            color: #7f8c8d;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            margin-bottom: 16px;
+            padding: 10px;
+            background-color: #fadbd8;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .applicant-text {
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+        
+        .applicant-text h4 {
+            margin-bottom: 8px;
+            color: var(--primary-color);
+        }
+        
+        .applicant-text p {
+            margin-bottom: 16px;
+            white-space: pre-wrap;
+        }
+        
+        /* Help Button and Modal Styles */
+        .help-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: var(--secondary-color);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            font-size: 24px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1001;
+            overflow-y: auto;
+        }
+        
+        .modal-content {
+            background-color: var(--card-bg);
+            margin: 50px auto;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            max-width: 800px;
+            position: relative;
+        }
+        
+        .close-button {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            font-weight: bold;
+            color: #aaa;
+            cursor: pointer;
+        }
+        
+        .close-button:hover {
+            color: var(--text-color);
+        }
+        
+        .modal h2, .modal h3 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        
+        .modal p, .modal ul {
+            margin-bottom: 16px;
+        }
+        
+        .modal ul {
+            padding-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Help Button and Modal -->
+    <div class="help-button" id="help-button">?</div>
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="close-modal">&times;</span>
+            <h2>How to Use the Applicant Review Tool</h2>
+            
+            <h3>Getting Started</h3>
+            <p>This tool helps you review and rate applicants from a CSV file. Follow these steps:</p>
+            <ol>
+                <li>Enter your name in the "Your Name" field</li>
+                <li>Upload a CSV file containing applicant data</li>
+                <li>Click "Start Review" to begin the review process</li>
+            </ol>
+            
+            <h3>CSV File Format</h3>
+            <p>The CSV file should contain the following information for each applicant:</p>
+            <ul>
+                <li>Submission ID</li>
+                <li>Text responses to application questions</li>
+                <li>Self-rated experience levels (on a scale of 1-5) in various areas</li>
+            </ul>
+            
+            <h3>Reviewing Applicants</h3>
+            <p>For each applicant, you can:</p>
+            <ul>
+                <li>Read their text responses to questions</li>
+                <li>View their self-rated experience levels in a bar chart</li>
+                <li>Rate the applicant using the star rating system (1-5 stars)</li>
+                <li>Add comments about the applicant (max 300 characters)</li>
+                <li>Navigate between applicants using the "Previous" and "Next" buttons</li>
+            </ul>
+            
+            <h3>Saving and Exporting</h3>
+            <p>Your ratings and comments are automatically saved to your browser's local storage.</p>
+            <p>When you've completed your reviews, click "Export Ratings to CSV" to download all the data with your ratings included.</p>
+            
+            <h3>Data Privacy</h3>
+            <p>All data remains on your computer and is stored in your browser's local storage. No data is sent to any server.</p>
+            <p>You can delete all stored data by clicking the "Delete All Data" button.</p>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Applicant Review Tool</h1>
+        
+        <!-- Setup Section -->
+        <section id="setup-section" class="setup-section">
+            <h2>Setup</h2>
+            <div>
+                <label for="expert-name">Your Name:</label>
+                <input type="text" id="expert-name" placeholder="Enter your full name" required>
+            </div>
+            <div>
+                <label for="csv-file">Upload Applicants CSV:</label>
+                <input type="file" id="csv-file" accept=".csv">
+            </div>
+            <div class="error-message" id="error-message"></div>
+            <button id="start-review-btn">Start Review</button>
+        </section>
+        
+        <!-- Review Section (Hidden initially) -->
+        <section id="review-section" class="review-section hidden">
+            <div class="progress-bar">
+                <div id="progress-bar-inner" class="progress-bar-inner"></div>
+            </div>
+            <div id="progress-text">Applicant 1 of 0</div>
+            
+            <h2 id="applicant-header">Applicant</h2>
+            
+            <!-- Applicant Details -->
+            <div id="applicant-details">
+                <!-- Text Responses -->
+                <div class="applicant-text">
+                    <h4>Why are you interested in this role?</h4>
+                    <p id="interest-text"></p>
+                    
+                    <h4>What sets you apart?</h4>
+                    <p id="apart-text"></p>
+                    
+                    <h4>Proposed Change or Innovation</h4>
+                    <p id="innovation-text"></p>
+                    
+                    <h4>Implementation Plan</h4>
+                    <p id="implementation-text"></p>
+                </div>
+                
+                <!-- Experience Bar Chart -->
+                <div class="chart-container">
+                    <h3>Self-Rated Experience Levels</h3>
+                    <div id="bar-chart" class="bar-chart">
+                        <!-- Bars will be added here dynamically -->
+                    </div>
+                </div>
+                
+                <!-- Expert Rating -->
+                <div>
+                    <h3>Your Rating</h3>
+                    <div class="star-rating" id="star-rating">
+                        <span class="star" data-value="1">★</span>
+                        <span class="star" data-value="2">★</span>
+                        <span class="star" data-value="3">★</span>
+                        <span class="star" data-value="4">★</span>
+                        <span class="star" data-value="5">★</span>
+                    </div>
+                </div>
+                
+                <!-- Comments -->
+                <div>
+                    <label for="expert-comments">Your Comments (max 300 characters):</label>
+                    <textarea 
+                        id="expert-comments" 
+                        maxlength="300" 
+                        placeholder="Enter your comments about this applicant"></textarea>
+                    <div class="char-count" id="char-count">0/300</div>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <div class="navigation">
+                <button id="prev-btn" class="secondary">Previous Applicant</button>
+                <button id="next-btn">Next Applicant</button>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div>
+                <button id="export-btn">Export Ratings to CSV</button>
+                <button id="kill-btn" class="danger">Delete All Data</button>
+                <button id="back-btn" class="secondary">Back to Setup</button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // Global variables
+        let applicantsData = [];
+        let currentIndex = 0;
+        let expertName = "";
+        let expertRatings = {};
+        const DB_KEY = "applicant_review_data";
+        
+        // DOM elements
+        const setupSection = document.getElementById('setup-section');
+        const reviewSection = document.getElementById('review-section');
+        const expertNameInput = document.getElementById('expert-name');
+        const csvFileInput = document.getElementById('csv-file');
+        const startReviewBtn = document.getElementById('start-review-btn');
+        const errorMessage = document.getElementById('error-message');
+        const progressBarInner = document.getElementById('progress-bar-inner');
+        const progressText = document.getElementById('progress-text');
+        const applicantHeader = document.getElementById('applicant-header');
+        const interestText = document.getElementById('interest-text');
+        const apartText = document.getElementById('apart-text');
+        const innovationText = document.getElementById('innovation-text');
+        const implementationText = document.getElementById('implementation-text');
+        const barChart = document.getElementById('bar-chart');
+        const starRating = document.getElementById('star-rating');
+        const expertComments = document.getElementById('expert-comments');
+        const charCount = document.getElementById('char-count');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const exportBtn = document.getElementById('export-btn');
+        const killBtn = document.getElementById('kill-btn');
+        const backBtn = document.getElementById('back-btn');
+        const helpBtn = document.getElementById('help-button');
+        const helpModal = document.getElementById('help-modal');
+        const closeModalBtn = document.getElementById('close-modal');
+        
+        // Initialize the application
+        function init() {
+            // Check for existing data in localStorage
+            loadFromLocalStorage();
+            
+            // Event listeners
+            startReviewBtn.addEventListener('click', startReview);
+            csvFileInput.addEventListener('change', validateCSV);
+            prevBtn.addEventListener('click', goToPrevious);
+            nextBtn.addEventListener('click', goToNext);
+            exportBtn.addEventListener('click', exportToCSV);
+            killBtn.addEventListener('click', deleteAllData);
+            backBtn.addEventListener('click', goBackToSetup);
+            
+            // Help modal events
+            helpBtn.addEventListener('click', openHelpModal);
+            closeModalBtn.addEventListener('click', closeHelpModal);
+            window.addEventListener('click', (event) => {
+                if (event.target === helpModal) {
+                    closeHelpModal();
+                }
+            });
+            
+            // Star rating events
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => {
+                star.addEventListener('click', () => setRating(star.dataset.value));
+            });
+            
+            // Character count for comments
+            expertComments.addEventListener('input', updateCharCount);
+        }
+        
+        // Open help modal
+        function openHelpModal() {
+            helpModal.style.display = 'block';
+        }
+        
+        // Close help modal
+        function closeHelpModal() {
+            helpModal.style.display = 'none';
+        }
+        
+        // Validate the CSV file using Papa Parse
+        function validateCSV() {
+            const file = csvFileInput.files[0];
+            if (!file) return;
+            
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                delimiter: ",",
+                quoteChar: '"',
+                escapeChar: '"',
+                preview: 2, // Only parse a few rows for validation
+                complete: function(results) {
+                    console.log("CSV Validation Results:", results);
+                    
+                    if (results.errors && results.errors.length > 0) {
+                        console.error("CSV parsing errors:", results.errors);
+                        showError(`CSV parsing error: ${results.errors[0].message}`);
+                        return;
+                    }
+                    
+                    if (results.meta && results.meta.fields) {
+                        const columnCount = results.meta.fields.length;
+                        console.log(`CSV has ${columnCount} columns:`, results.meta.fields);
+                        
+                        if (columnCount < 18) {
+                            showError(`CSV has ${columnCount} columns, but 18 are expected. Please check your file format.`);
+                            return;
+                        }
+                        
+                        // CSV seems valid
+                        hideError();
+                    } else {
+                        showError("Could not determine CSV structure. Please check your file format.");
+                    }
+                },
+                error: function(error) {
+                    console.error("CSV Parsing error:", error);
+                    showError(`Error parsing CSV: ${error.message}`);
+                }
+            });
+        }
+        
+        // Parse a single CSV line, handling quotes and different delimiters
+        function parseCSVLine(line) {
+            // First try to detect if we're dealing with a tab-delimited file
+            const tabCount = (line.match(/\t/g) || []).length;
+            const commaCount = (line.match(/,/g) || []).length;
+            const delimiter = tabCount > commaCount ? '\t' : ',';
+            
+            const result = [];
+            let cell = '';
+            let inQuotes = false;
+            
+            for (let i = 0; i < line.length; i++) {
+                const char = line[i];
+                
+                if (char === '"') {
+                    // Handle quote escaping (two double quotes in a row inside quotes)
+                    if (inQuotes && i + 1 < line.length && line[i+1] === '"') {
+                        cell += '"';
+                        i++; // Skip the next quote
+                    } else {
+                        inQuotes = !inQuotes;
+                    }
+                } else if (char === delimiter && !inQuotes) {
+                    result.push(cell.trim());
+                    cell = '';
+                } else {
+                    cell += char;
+                }
+            }
+            
+            // Add the last cell
+            result.push(cell.trim());
+            
+            // Debug output
+            console.log("Parsed line with delimiter:", delimiter, "Result:", result);
+            
+            return result;
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+        }
+        
+        // Hide error message
+        function hideError() {
+            errorMessage.style.display = 'none';
+        }
+        
+        // Start the review process
+        function startReview() {
+            // Validate expert name
+            expertName = expertNameInput.value.trim();
+            if (!expertName) {
+                showError("Please enter your name.");
+                return;
+            }
+            
+            // Validate file selection
+            const file = csvFileInput.files[0];
+            if (!file) {
+                showError("Please select a CSV file.");
+                return;
+            }
+            
+            // Parse the CSV file directly using Papa Parse
+            Papa.parse(file, {
+                header: true,
+                skipEmptyLines: true,
+                delimiter: ",", 
+                quoteChar: '"',
+                escapeChar: '"',
+                complete: function(results) {
+                    try {
+                        console.log("CSV parsing complete:", results);
+                        
+                        if (results.errors && results.errors.length > 0) {
+                            console.warn("CSV parsing had some issues:", results.errors);
+                            // Only show error if it's critical
+                            if (results.errors.some(e => e.type === "Delimiter" || e.type === "Quotes")) {
+                                showError(`CSV parsing error: ${results.errors[0].message}`);
+                                return;
+                            }
+                        }
+                        
+                        // Parse the data into our expected format
+                        const csvData = parseCSV(Papa.unparse(results.data));
+                        if (csvData.length === 0) {
+                            showError("No applicant data found in the CSV.");
+                            return;
+                        }
+                        
+                        // Store the data
+                        applicantsData = csvData;
+                        
+                        // Initialize ratings if not loaded from storage
+                        if (Object.keys(expertRatings).length === 0) {
+                            applicantsData.forEach(applicant => {
+                                const id = applicant["Submission ID"];
+                                if (id && !expertRatings[id]) {
+                                    expertRatings[id] = {
+                                        rating: 0,
+                                        comments: ""
+                                    };
+                                }
+                            });
+                        }
+                        
+                        // Switch to review section
+                        setupSection.classList.add('hidden');
+                        reviewSection.classList.remove('hidden');
+                        
+                        // Display first applicant
+                        currentIndex = 0;
+                        displayApplicant(currentIndex);
+                        saveToLocalStorage();
+                        
+                    } catch (err) {
+                        console.error("Error processing CSV data:", err);
+                        showError("Error processing CSV data: " + err.message);
+                    }
+                },
+                error: function(error) {
+                    console.error("CSV Parsing error:", error);
+                    showError(`Error parsing CSV: ${error.message}`);
+                }
+            });
+        }
+        
+        // Parse the entire CSV using Papa Parse
+        function parseCSV(csvText) {
+            // Define column mappings - these are the keys we'll use internally
+            const columnMappings = [
+                "Submission ID", 
+                "Respondent ID", 
+                "Submitted at", 
+                "Why are you interested in this role?", 
+                "What sets you apart?",
+                "Either describe 1 thing you would like to change in the ITI education offering or describe an innovation in education you would like to see at the ITI.", 
+                "Describe how you would implement above change or innovation.", 
+                "What do you consider the level of your experience to be in academia?", 
+                "What do you consider the level of your experience to be in clinical practice (private)?", 
+                "What do you consider the level of your experience to be in clinical practice (university/hospital/government)?", 
+                "What do you consider the level of your experience to be in management within a public organisation?", 
+                "What do you consider the level of your experience to be in management within a private/for profit organisation?", 
+                "What do you consider the level of your experience to be in the design and execution of education within institutions?", 
+                "What do you consider the level of your experience to be in the design and execution of continuous professional development and education through private entities?", 
+                "What do you consider the level of your experience to be in the design and execution of online education?", 
+                "What do you consider the level of your experience to be in commercial enterprise and entrepreneurship?", 
+                "What do you consider the level of your experience to be in conventional or digital marketing?", 
+                "What do you consider the level of your experience to be in media & content productions for educational purposes?"
+            ];
+            
+            // Parse the CSV using Papa Parse
+            const results = Papa.parse(csvText, {
+                header: true,
+                skipEmptyLines: true,
+                delimiter: ",",
+                quoteChar: '"',
+                escapeChar: '"',
+                keepEmptyRows: false,
+                transformHeader: function(header) {
+                    // Normalize headers by trimming whitespace
+                    return header.trim();
+                }
+            });
+            
+            console.log("Papa Parse results:", results);
+            
+            if (results.errors && results.errors.length > 0) {
+                console.warn("CSV parsing had some issues:", results.errors);
+            }
+            
+            const applicants = [];
+            
+            // Process each row into our expected format
+            if (results.data && results.data.length > 0) {
+                // Get the actual column names from the parsed data
+                const actualColumns = results.meta.fields;
+                console.log("Actual CSV columns:", actualColumns);
+                
+                // Create a mapping from actual column names to our internal names
+                const fieldMapping = {};
+                
+                // For each of our expected columns, find the closest match in the actual columns
+                columnMappings.forEach((expectedColumn, index) => {
+                    // Try to find an exact match first
+                    let match = actualColumns.find(col => col === expectedColumn);
+                    
+                    // If no exact match, look for a column that contains our expected column name
+                    if (!match) {
+                        match = actualColumns.find(col => 
+                            col.includes(expectedColumn) || 
+                            expectedColumn.includes(col)
+                        );
+                    }
+                    
+                    // If still no match, use the column at the same index if available
+                    if (!match && index < actualColumns.length) {
+                        match = actualColumns[index];
+                    }
+                    
+                    if (match) {
+                        fieldMapping[match] = expectedColumn;
+                    }
+                });
+                
+                console.log("Field mapping:", fieldMapping);
+                
+                // Process each row
+                results.data.forEach(row => {
+                    const applicant = {};
+                    
+                    // Map fields from actual column names to our internal names
+                    Object.keys(row).forEach(columnName => {
+                        const mappedName = fieldMapping[columnName] || columnName;
+                        applicant[mappedName] = row[columnName] || "";
+                    });
+                    
+                    // Ensure we have all expected fields
+                    columnMappings.forEach(field => {
+                        if (!applicant[field]) {
+                            applicant[field] = "";
+                        }
+                    });
+                    
+                    applicants.push(applicant);
+                });
+            }
+            
+            console.log(`Processed ${applicants.length} valid applicants`);
+            return applicants;
+        }
+        
+        // Display an applicant at the given index
+        function displayApplicant(index) {
+            if (index < 0 || index >= applicantsData.length) return;
+            
+            const applicant = applicantsData[index];
+            
+            // Update progress indicator
+            updateProgress(index);
+            
+            // Set applicant header
+            applicantHeader.textContent = `Applicant ID: ${applicant["Submission ID"]}`;
+            
+            // Display text responses
+            interestText.textContent = applicant["Why are you interested in this role?"] || "No response";
+            apartText.textContent = applicant["What sets you apart?"] || "No response";
+            innovationText.textContent = applicant["Either describe 1 thing you would like to change in the ITI education offering or describe an innovation in education you would like to see at the ITI."] || "No response";
+            implementationText.textContent = applicant["Describe how you would implement above change or innovation."] || "No response";
+            
+            // Generate experience bar chart
+            generateBarChart(applicant);
+            
+            // Set existing rating and comments if any
+            const id = applicant["Submission ID"];
+            if (expertRatings[id]) {
+                setRating(expertRatings[id].rating);
+                expertComments.value = expertRatings[id].comments || "";
+                updateCharCount();
+            } else {
+                // Clear rating and comments
+                setRating(0);
+                expertComments.value = "";
+                updateCharCount();
+            }
+            
+            // Update navigation buttons
+            prevBtn.disabled = index === 0;
+            nextBtn.disabled = index === applicantsData.length - 1;
+        }
+        
+        // Update progress indicator
+        function updateProgress(index) {
+            const percentage = ((index + 1) / applicantsData.length) * 100;
+            progressBarInner.style.width = `${percentage}%`;
+            progressText.textContent = `Applicant ${index + 1} of ${applicantsData.length}`;
+        }
+        
+        // Generate the experience bar chart
+        function generateBarChart(applicant) {
+            // Clear existing chart
+            barChart.innerHTML = '';
+            
+            // Define experience fields and their labels
+            const experienceFields = [
+                { key: "What do you consider the level of your experience to be in academia?", label: "Academia" },
+                { key: "What do you consider the level of your experience to be in clinical practice (private)?", label: "Clinical (Private)" },
+                { key: "What do you consider the level of your experience to be in clinical practice (university/hospital/government)?", label: "Clinical (Public)" },
+                { key: "What do you consider the level of your experience to be in management within a public organisation?", label: "Management (Public)" },
+                { key: "What do you consider the level of your experience to be in management within a private/for profit organisation?", label: "Management (Private)" },
+                { key: "What do you consider the level of your experience to be in the design and execution of education within institutions?", label: "Education Design (Institutions)" },
+                { key: "What do you consider the level of your experience to be in the design and execution of continuous professional development and education through private entities?", label: "CPD Design (Private)" },
+                { key: "What do you consider the level of your experience to be in the design and execution of online education?", label: "Online Education Design" },
+                { key: "What do you consider the level of your experience to be in commercial enterprise and entrepreneurship?", label: "Enterprise & Entrepreneurship" },
+                { key: "What do you consider the level of your experience to be in conventional or digital marketing?", label: "Marketing" },
+                { key: "What do you consider the level of your experience to be in media & content productions for educational purposes?", label: "Media & Content Production" }
+            ];
+            
+            // Create bar for each experience field
+            experienceFields.forEach(field => {
+                const value = parseInt(applicant[field.key]) || 0;
+                const percentage = (value / 5) * 100;
+                
+                const barContainer = document.createElement('div');
+                barContainer.className = 'bar-container';
+                
+                const barLabel = document.createElement('div');
+                barLabel.className = 'bar-label';
+                barLabel.textContent = `${field.label} (${value}/5)`;
+                
+                const barOuter = document.createElement('div');
+                barOuter.className = 'bar-outer';
+                
+                const barInner = document.createElement('div');
+                barInner.className = 'bar-inner';
+                barInner.style.width = `${percentage}%`;
+                
+                barOuter.appendChild(barInner);
+                barContainer.appendChild(barLabel);
+                barContainer.appendChild(barOuter);
+                barChart.appendChild(barContainer);
+            });
+        }
+        
+        // Set the star rating
+        function setRating(value) {
+            value = parseInt(value) || 0;
+            
+            // Update visual stars
+            const stars = document.querySelectorAll('.star');
+            stars.forEach(star => {
+                const starValue = parseInt(star.dataset.value);
+                if (starValue <= value) {
+                    star.classList.add('selected');
+                } else {
+                    star.classList.remove('selected');
+                }
+            });
+            
+            // Save the rating
+            if (applicantsData.length > 0 && currentIndex >= 0) {
+                const id = applicantsData[currentIndex]["Submission ID"];
+                if (!expertRatings[id]) {
+                    expertRatings[id] = { rating: 0, comments: "" };
+                }
+                expertRatings[id].rating = value;
+                saveToLocalStorage();
+            }
+        }
+        
+        // Update character count for comments
+        function updateCharCount() {
+            const count = expertComments.value.length;
+            charCount.textContent = `${count}/300`;
+            
+            // Save the comments
+            if (applicantsData.length > 0 && currentIndex >= 0) {
+                const id = applicantsData[currentIndex]["Submission ID"];
+                if (!expertRatings[id]) {
+                    expertRatings[id] = { rating: 0, comments: "" };
+                }
+                expertRatings[id].comments = expertComments.value;
+                saveToLocalStorage();
+            }
+        }
+        
+        // Navigate to previous applicant
+        function goToPrevious() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                displayApplicant(currentIndex);
+            }
+        }
+        
+        // Navigate to next applicant
+        function goToNext() {
+            if (currentIndex < applicantsData.length - 1) {
+                currentIndex++;
+                displayApplicant(currentIndex);
+            }
+        }
+        
+        // Export ratings to CSV
+        function exportToCSV() {
+            if (!applicantsData.length) {
+                showError("No data to export.");
+                return;
+            }
+            
+            try {
+                // Clone the original data to avoid modifying it
+                const exportData = JSON.parse(JSON.stringify(applicantsData));
+                
+                // Add rating columns to each applicant
+                exportData.forEach(applicant => {
+                    const id = applicant["Submission ID"];
+                    applicant["Expert Rating"] = expertRatings[id] ? expertRatings[id].rating : 0;
+                    applicant["Expert Comments"] = expertRatings[id] ? expertRatings[id].comments : "";
+                });
+                
+                // Get all unique column names
+                const columns = Object.keys(exportData[0]);
+                
+                // Create CSV content
+                let csvContent = columns.join(",") + "\n";
+                
+                exportData.forEach(applicant => {
+                    const row = columns.map(column => {
+                        let value = applicant[column] || "";
+                        // Escape quotes and wrap in quotes if needed
+                        if (value.toString().includes(",") || value.toString().includes('"') || value.toString().includes("\n")) {
+                            value = '"' + value.toString().replace(/"/g, '""') + '"';
+                        }
+                        return value;
+                    });
+                    csvContent += row.join(",") + "\n";
+                });
+                
+                // Create and download the CSV file
+                const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const sanitizedName = expertName.replace(/[^a-z0-9]/gi, '_');
+                const link = document.createElement("a");
+                link.setAttribute("href", url);
+                link.setAttribute("download", `EC_applications_rated_by_${sanitizedName}.csv`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+            } catch (err) {
+                showError("Error exporting data: " + err.message);
+            }
+        }
+        
+        // Delete all data from local storage
+        function deleteAllData() {
+            if (confirm("Are you sure you want to delete all your ratings and data? This cannot be undone.")) {
+                localStorage.removeItem(DB_KEY);
+                expertRatings = {};
+                goBackToSetup();
+            }
+        }
+        
+        // Go back to setup screen
+        function goBackToSetup() {
+            reviewSection.classList.add('hidden');
+            setupSection.classList.remove('hidden');
+        }
+        
+        // Save data to local storage
+        function saveToLocalStorage() {
+            try {
+                const data = {
+                    expertName: expertName,
+                    ratings: expertRatings,
+                    lastUpdated: new Date().toISOString()
+                };
+                localStorage.setItem(DB_KEY, JSON.stringify(data));
+            } catch (err) {
+                console.error("Error saving to localStorage:", err);
+            }
+        }
+        
+        // Load data from local storage
+        function loadFromLocalStorage() {
+            try {
+                const storedData = localStorage.getItem(DB_KEY);
+                if (storedData) {
+                    const data = JSON.parse(storedData);
+                    expertName = data.expertName || "";
+                    expertRatings = data.ratings || {};
+                    expertNameInput.value = expertName;
+                }
+            } catch (err) {
+                console.error("Error loading from localStorage:", err);
+                // If there's an error, reset the storage
+                localStorage.removeItem(DB_KEY);
+            }
+        }
+        
+        // Initialize the app when the page loads
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+    
+    <footer style="text-align: center; margin-top: 20px; padding: 10px; color: #7f8c8d; font-size: 12px; border-top: 1px solid #eee;">
+        &copy; 2025 Philipp Nueesch. All rights reserved. | 
+        <a href="https://github.com/phn/applicants-review-app" style="color: #3498db; text-decoration: none;">GitHub Repository</a>
+    </footer>
+</body>
+</html>
