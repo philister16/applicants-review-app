@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Applicant Review Tool - User Instructions</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-top: 30px;
+        }
+        h3 {
+            color: #2c3e50;
+        }
+        ul, ol {
+            margin-bottom: 20px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        .note {
+            background-color: #f8f9fa;
+            border-left: 4px solid #3498db;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        strong {
+            color: #2c3e50;
+        }
+        .print-button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        .print-button:hover {
+            background-color: #2980b9;
+        }
+        @media print {
+            .print-button {
+                display: none;
+            }
+            body {
+                font-size: 12pt;
+            }
+            h1 {
+                font-size: 18pt;
+            }
+            h2 {
+                font-size: 16pt;
+            }
+            h3 {
+                font-size: 14pt;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="print-button" onclick="window.print()">Print as PDF</button>
+    
+    <h1>Applicant Review Tool - User Instructions</h1>
+
+    <h2>Getting Started</h2>
+
+    <ol>
+        <li><strong>Save both files</strong> to your computer:
+            <ul>
+                <li><code>applicant-review-app.html</code> (the application)</li>
+                <li>Your CSV file containing applicant data</li>
+            </ul>
+        </li>
+        <li><strong>Open the HTML file</strong> by double-clicking it or right-clicking and selecting "Open with" your preferred web browser (Chrome, Firefox, Safari, or Edge recommended).</li>
+        <li><strong>Enter your name</strong> in the "Your Name" field. This will be used to identify your ratings in the exported data.</li>
+        <li><strong>Upload the CSV file</strong> by clicking "Choose File" and selecting the applicant data CSV file.</li>
+        <li><strong>Click "Start Review"</strong> to begin reviewing applicants.</li>
+    </ol>
+
+    <h2>Reviewing Applicants</h2>
+
+    <p>For each applicant, you'll see:</p>
+
+    <ul>
+        <li><strong>Text responses</strong> to application questions</li>
+        <li><strong>Self-rated experience levels</strong> displayed as bar charts</li>
+        <li><strong>Rating options</strong> (1-5 stars)</li>
+        <li><strong>Comments field</strong> for your notes (300 character maximum)</li>
+    </ul>
+
+    <h3>Navigation</h3>
+
+    <ul>
+        <li>Use the <strong>Next</strong> and <strong>Previous</strong> buttons to move between applicants</li>
+        <li>The <strong>progress bar</strong> at the top shows how many applicants you've reviewed</li>
+        <li>Your ratings and comments are <strong>automatically saved</strong> as you work</li>
+    </ul>
+
+    <h3>Tips for Efficient Review</h3>
+
+    <ul>
+        <li>Rate each applicant immediately after reviewing their information</li>
+        <li>Use the comments field to note specific strengths or concerns</li>
+        <li>The application works offline - no internet connection required</li>
+        <li>Your ratings are stored in your browser, so don't clear your browser data until you've exported</li>
+    </ul>
+
+    <div class="note">
+        <p>If you need help at any time, click the <strong>?</strong> button in the top right corner of the application.</p>
+    </div>
+
+    <h2>Exporting Your Ratings</h2>
+
+    <ol>
+        <li>After reviewing all applicants (or when you want to save your progress):</li>
+        <li>Click the <strong>"Export Ratings to CSV"</strong> button</li>
+        <li>A file named <code>EC_applications_rated_by_[Your Name].csv</code> will be downloaded to your computer</li>
+        <li>This CSV file contains all original applicant data plus your ratings and comments</li>
+    </ol>
+
+    <h2>Troubleshooting</h2>
+
+    <ul>
+        <li><strong>If the page fails to load:</strong> Try a different web browser</li>
+        <li><strong>If the CSV won't upload:</strong> Ensure it follows the required format with headers</li>
+        <li><strong>If you lose your ratings:</strong> Check if you've cleared your browser data. Always export your ratings frequently</li>
+    </ul>
+
+    <h2>Data Privacy</h2>
+
+    <ul>
+        <li>All data remains on your computer</li>
+        <li>No information is sent to any server</li>
+        <li>You can delete all stored data by clicking "Delete All Data"</li>
+    </ul>
+
+    <h2>Questions or Issues?</h2>
+
+    <p>Contact: Philipp Nueesch</p>
+
+    <div class="note">
+        <p><strong>Need to print these instructions?</strong> Use the "Print as PDF" button at the top of this page or press Ctrl+P (Windows) or Cmd+P (Mac) to save as PDF or print.</p>
+    </div>
+
+    <script>
+        // If opened directly from file system, show a note about printing
+        if (window.location.protocol === 'file:') {
+            document.addEventListener('DOMContentLoaded', function() {
+                const note = document.createElement('div');
+                note.className = 'note';
+                note.innerHTML = '<p><strong>To create a PDF:</strong> Click the "Print as PDF" button above or press Ctrl+P (Windows) or Cmd+P (Mac), then choose "Save as PDF" from the destination/printer options.</p>';
+                document.body.insertBefore(note, document.body.firstChild);
+            });
+        }
+    </script>
+</body>
+</html>
