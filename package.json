@@ -1,0 +1,13 @@
+{
+  "name": "applicants-review-app",
+  "version": "1.0.0",
+  "description": "Application for reviewing applicants from CSV data",
+  "main": "index.js",
+  "scripts": {
+    "convert": "node scripts/excelToJson.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "xlsx": "^0.18.5"
+  }
+}

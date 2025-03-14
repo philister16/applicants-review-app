@@ -35,6 +35,7 @@ build/
 logs
 *.log
 
-# User-specific files
+# User-specific files and folders
 *.csv
 !example-applicants.csv
+ratings/
