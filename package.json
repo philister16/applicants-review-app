@@ -3,8 +3,13 @@
   "version": "1.0.0",
   "description": "Application for reviewing applicants from CSV data",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/philister16/applicants-review-app"
+  },
   "scripts": {
-    "convert": "node scripts/excelToJson.js",
+    "convert:xls": "node scripts/excelToJson.js",
+    "convert:json": "node scripts/jsonToArray.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {

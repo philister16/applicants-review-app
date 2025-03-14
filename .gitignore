@@ -39,3 +39,4 @@ logs
 *.csv
 !example-applicants.csv
 ratings/
+explorer.html
